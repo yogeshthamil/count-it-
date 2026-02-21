@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Gaming Counter</title>
+
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    background: radial-gradient(circle at center, #0f2027, #203a43, #000);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: monospace;
+    color: #00ffcc;
+    overflow: hidden;
+}
+
+/* moving grid background */
+body::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background-image:
+        linear-gradient(#00ffcc22 1px, transparent 1px),
+        linear-gradient(90deg, #00ffcc22 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: move 8s linear infinite;
+}
+
+@keyframes move {
+    from { transform: translate(0,0); }
+    to { transform: translate(-40px,-40px); }
+}
+
+.panel {
+    position: relative;
+    z-index: 1;
+    background: rgba(0,0,0,0.85);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 25px #00ffcc;
+    text-align: center;
+    width: 350px;
+}
+
+h2 {
+    text-shadow: 0 0 10px #00ffcc;
+}
+
+input {
+    width: 80%;
+    padding: 8px;
+    margin: 8px 0;
+    background: black;
+    border: 1px solid #00ffcc;
+    color: #00ffcc;
+    text-align: center;
+}
+
+button {
+    padding: 8px 15px;
+    margin: 8px;
+    background: black;
+    border: 1px solid #00ffcc;
+    color: #00ffcc;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #00ffcc;
+    color: black;
+}
+
+#display {
+    margin-top: 20px;
+    font-size: 40px;
+    min-height: 60px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+    <h2>⚡ NUMBER MODE ⚡</h2>
+    <input type="number" id="start" placeholder="Start Number">
+    <input type="number" id="end" placeholder="End Number">
+    <input type="number" id="interval" placeholder="Interval (seconds)">
+    <br>
+    <button onclick="startCount()">START</button>
+    <div id="display">READY</div>
+</div>
+
+<script>
+
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function speakNumber(num) {
+    let msg = new SpeechSynthesisUtterance(num);
+    msg.rate = 1;
+    msg.pitch = 1.1;
+    speechSynthesis.speak(msg);
+}
+
+function tickSound() {
+    let osc = audioCtx.createOscillator();
+    let gain = audioCtx.createGain();
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.frequency.value = 900;
+    gain.gain.value = 0.1;
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.05);
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function startCount() {
+
+    let start = parseInt(document.getElementById("start").value);
+    let end = parseInt(document.getElementById("end").value);
+    let interval = parseInt(document.getElementById("interval").value);
+
+    if (isNaN(start) || isNaN(end) || isNaN(interval)) {
+        alert("Enter valid numbers!");
+        return;
+    }
+
+    let display = document.getElementById("display");
+
+    for (let num = start; num <= end; num++) {
+
+        display.innerText = num;
+        speakNumber(num);
+
+        for (let i = 0; i < interval; i++) {
+            await sleep(1000);
+            display.innerText += ".";
+            tickSound();
+        }
+    }
+
+    display.innerText = "DONE 💀";
+}
+
+</script>
+
+</body>
+</html>
